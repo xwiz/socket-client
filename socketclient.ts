@@ -8,6 +8,7 @@ class SocketClient {
   private reconnectAttempts: number = 0;
   private logCallback: ((message: string) => void) | undefined;
   const NORMAL_CLOSURE_CODE = 1000;
+  private targetEventName: string | null = null;
 
   constructor(url: string) {
     this.url = url;
@@ -93,7 +94,29 @@ class SocketClient {
     this.listeners.set(eventName, callback);
   }
 
-  public emit(eventName: string, eventData: any): void {
+  to(eventName: string): this {
+    this.targetEventName = eventName;
+    return this;
+  }
+
+  emit(eventNameOrData: string | any, eventData?: any): void {
+    if (typeof eventNameOrData === 'string') {
+      // Non-chained syntax: emit(eventName, eventData)
+      const eventName = eventNameOrData;
+      eventData = eventData || {}; // Default to an empty object if eventData is not provided
+      this.emitInternal(eventName, eventData);
+    } else {
+      // Chained syntax: to(eventName).emit(eventData)
+      if (this.targetEventName && this.isConnected) {
+        this.emitInternal(this.targetEventName, eventNameOrData);
+        this.targetEventName = null; // Reset the target event name after emitting
+      } else {
+        this.logWarn('WebSocket is not connected or no target event set. Unable to emit event.');
+      }
+    }
+  }
+
+  private emitInternal(eventName: string, eventData: any): void {
     if (this.isConnected) {
       const message = JSON.stringify({ event: eventName, data: eventData });
       this.socket?.send(message);
