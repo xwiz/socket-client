@@ -8,7 +8,7 @@ var keyFile = "/ssl/privkey.pem";
 let preventDoubleAuthentication = true;
 const userSockets = new Map();
 const akkadGame = new akkadGame();
-
+const PORT = 7070;
 const redisClient = redis.createClient({
     host: "host",
     port: 6379,
@@ -226,9 +226,9 @@ const app = SSLApp({
             });
         },
     })
-    .listen(9081, "0.0.0.0", (ticket) => {
+    .listen(PORT, "0.0.0.0", (ticket) => {
         if (ticket) {
-            console.log("Listening on port 7070");
+            console.log(`SOCKET NOW listening on port ${PORT}`);
             //imaginary method to receive the publisher
             akkadGame.launch(new MessageEmitter(app));
         } else {
